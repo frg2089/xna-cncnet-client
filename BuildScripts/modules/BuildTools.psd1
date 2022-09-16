@@ -57,7 +57,9 @@
   # RequiredAssemblies = @()
 
   # Script files (.ps1) that are run in the caller's environment prior to importing this module.
-  # ScriptsToProcess = @()
+  ScriptsToProcess = @(
+    './utils/Enums.ps1'
+  )
 
   # Type files (.ps1xml) to be loaded when importing this module
   # TypesToProcess = @()
@@ -67,7 +69,6 @@
 
   # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
   NestedModules        = @(
-    './utils/Enums.psm1'
     './utils/EngineMaps.psm1'
     './utils/.NetUtils.psm1'
     './utils/FSUtils.psm1'

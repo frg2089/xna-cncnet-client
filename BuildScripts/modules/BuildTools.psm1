@@ -71,7 +71,8 @@ function Build-Project
     Write-Host
     Write-Host `
       "Building $Game $Engine $Configuration $TargetFramework " `
-      + "$PlatformTarget $RuntimeIdentifier..." -ForegroundColor Blue
+      "$PlatformTarget $RuntimeIdentifier..." `
+      -ForegroundColor Blue
     Write-Host
 
     $Private:DotnetCommand = Get-Command 'dotnet'
@@ -110,25 +111,25 @@ function Build-Project
       { "--runtime:$RuntimeIdentifier" }
     )
 
-    Write-Debug ''
-    Write-Debug 'Invoke Build-Project'
-    Write-Debug ''
-    Write-Debug "Dotnet: $Private:DotnetCommand"
-    Write-Debug `
-      "Game: $Game; Engine: $Engine; Configuration: $Configuration; " `
-      + "TargetFramework: $TargetFramework; PlatformTarget: $PlatformTarget; " `
-      + "RuntimeIdentifier: $RuntimeIdentifier"
-    Write-Debug `
-      "SkipMoveLibraries: $SkipMoveLibraries; " `
-      + "TargetFrameworkWithoutTFM: $Private:TargetFrameworkWithoutTFM; " `
-      + "SpecialName: $Private:SpecialName; " `
-      + "ClientSuffix: $Private:ClientSuffix"
-    Write-Debug "RootDirectory: $Private:RootDirectory"
-    Write-Debug "ResourcesDirectory: $Private:ResourcesDirectory"
-    Write-Debug "CommonLibsDirectory: $Private:CommonLibsDirectory"
-    Write-Debug "SpecialLibsDirectory: $Private:SpecialLibsDirectory"
-    Write-Debug "BuildTargetDirectory: $Private:BuildTargetDirectory"
-    Write-Debug "DotnetArgs: $Private:DotnetArgs"
+    # Write-Debug ''
+    # Write-Debug 'Invoke Build-Project'
+    # Write-Debug ''
+    # Write-Debug "Dotnet: $Private:DotnetCommand"
+    # Write-Debug `
+    #   "Game: $Game; Engine: $Engine; Configuration: $Configuration; " `
+    #   + "TargetFramework: $TargetFramework; PlatformTarget: $PlatformTarget; " `
+    #   + "RuntimeIdentifier: $RuntimeIdentifier"
+    # Write-Debug `
+    #   "SkipMoveLibraries: $SkipMoveLibraries; " `
+    #   + "TargetFrameworkWithoutTFM: $Private:TargetFrameworkWithoutTFM; " `
+    #   + "SpecialName: $Private:SpecialName; " `
+    #   + "ClientSuffix: $Private:ClientSuffix"
+    # Write-Debug "RootDirectory: $Private:RootDirectory"
+    # Write-Debug "ResourcesDirectory: $Private:ResourcesDirectory"
+    # Write-Debug "CommonLibsDirectory: $Private:CommonLibsDirectory"
+    # Write-Debug "SpecialLibsDirectory: $Private:SpecialLibsDirectory"
+    # Write-Debug "BuildTargetDirectory: $Private:BuildTargetDirectory"
+    # Write-Debug "DotnetArgs: $Private:DotnetArgs"
   }
 
   process
