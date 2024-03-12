@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Reflection;
 #if WINFORMS
 using System.Windows.Forms;
 #endif
+
 using Rampastring.Tools;
 using ClientCore.Extensions;
+
 
 namespace ClientCore
 {
@@ -173,5 +176,12 @@ namespace ClientCore
             string resourceDir = SearchResourcesDir(startupPath);
             return new DirectoryInfo(resourceDir).Parent.FullName;
         }
+
+
+        private static HttpClient? s_httpClient = null;
+        public static HttpClient SharedClient => s_httpClient ??= new()
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
     }
 }

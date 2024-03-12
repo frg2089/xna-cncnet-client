@@ -42,6 +42,7 @@
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition="$(TargetFramework) == 'netstandard2.0' or $(TargetFramework) == 'netcoreapp2.0' or $(TargetFrameworkIdentifier) == '.NETFramework'" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <!-- I don't know how to write it. but I think we should make a note at here. -->
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'DXMainClient'">
