@@ -76,13 +76,10 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
 
         private void ConnectionManager_Disconnected(object sender, EventArgs e) => Enabled = false;
 
-        private void RefreshTunnelsAsync()
+        private async Task RefreshTunnelsAsync()
         {
-            Task.Factory.StartNew(() =>
-            {
-                List<CnCNetTunnel> tunnels = RefreshTunnels();
-                wm.AddCallback(new Action<List<CnCNetTunnel>>(HandleRefreshedTunnels), tunnels);
-            });
+            List<CnCNetTunnel> tunnels = await FetchTunnelsAsync();
+            wm.AddCallback(HandleRefreshedTunnels, tunnels);
         }
 
         private void HandleRefreshedTunnels(List<CnCNetTunnel> tunnels)
@@ -147,21 +144,19 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
         /// Downloads and parses the list of CnCNet tunnels.
         /// </summary>
         /// <returns>A list of tunnel servers.</returns>
-        private List<CnCNetTunnel> RefreshTunnels()
+        private static async Task<List<CnCNetTunnel>> FetchTunnelsAsync()
         {
             FileInfo tunnelCacheFile = SafePath.GetFile(ProgramConstants.ClientUserFilesPath, "tunnel_cache");
 
             List<CnCNetTunnel> returnValue = new List<CnCNetTunnel>();
 
-            WebClient client = new WebClient();
-
-            byte[] data;
+            string data;
 
             Logger.Log("Fetching tunnel server info.");
 
             try
             {
-                data = client.DownloadData(MainClientConstants.CNCNET_TUNNEL_LIST_URL);
+                data = await ProgramConstants.SharedClient.GetStringAsync(MainClientConstants.CNCNET_TUNNEL_LIST_URL);
             }
             catch (Exception ex)
             {
@@ -169,7 +164,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                 Logger.Log("Retrying.");
                 try
                 {
-                    data = client.DownloadData(MainClientConstants.CNCNET_TUNNEL_LIST_URL);
+                    data = await ProgramConstants.SharedClient.GetStringAsync(MainClientConstants.CNCNET_TUNNEL_LIST_URL);
                 }
                 catch
                 {
@@ -181,14 +176,12 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                     else
                     {
                         Logger.Log("Fetching tunnel server list failed. Using cached tunnel data.");
-                        data = File.ReadAllBytes(tunnelCacheFile.FullName);
+                        data = File.ReadAllText(tunnelCacheFile.FullName);
                     }
                 }
             }
 
-            string convertedData = Encoding.Default.GetString(data);
-
-            string[] serverList = convertedData.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] serverList = data.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             // skip first header item ("address;country;countrycode;name;password;clients;maxclients;official;latitude;longitude;version;distance")
             foreach (string serverInfo in serverList.Skip(1))
@@ -226,7 +219,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                     if (!clientDirectoryInfo.Exists)
                         clientDirectoryInfo.Create();
 
-                    File.WriteAllBytes(tunnelCacheFile.FullName, data);
+                    File.WriteAllText(tunnelCacheFile.FullName, data);
                 }
                 catch (Exception ex)
                 {
@@ -244,7 +237,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                 if (skipCount % CYCLES_PER_TUNNEL_LIST_REFRESH == 0)
                 {
                     skipCount = 0;
-                    RefreshTunnelsAsync();
+                    _ = RefreshTunnelsAsync();
                 }
                 else if (CurrentTunnel != null)
                 {
