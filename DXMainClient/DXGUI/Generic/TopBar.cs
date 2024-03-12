@@ -210,7 +210,8 @@ namespace DTAClient.DXGUI.Generic
                 AddChild(lblCnCNetPlayerCount);
                 CnCNetPlayerCountTask.CnCNetGameCountUpdated += CnCNetInfoController_CnCNetGameCountUpdated;
                 cncnetPlayerCountCancellationSource = new CancellationTokenSource();
-                CnCNetPlayerCountTask.InitializeService(cncnetPlayerCountCancellationSource);
+                // TODO: should we wait it?
+                CnCNetPlayerCountTask.InitializeServiceAsync(cncnetPlayerCountCancellationSource.Token).Wait();
             }
 
             lblConnectionStatus.CenterOnParent();
