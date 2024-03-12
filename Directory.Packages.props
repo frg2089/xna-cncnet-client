@@ -43,6 +43,8 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Net.Http" />
+    <PackageReference Include="System.Net.Http.Json" />
+    <PackageVersion Include="System.Net.Http.Json" Version="8.0.0" />
   </ItemGroup>
   <!-- I don't know how to write it. but I think we should make a note at here. -->
   <ItemGroup Condition="'$(MSBuildProjectName)' == 'DXMainClient'">
