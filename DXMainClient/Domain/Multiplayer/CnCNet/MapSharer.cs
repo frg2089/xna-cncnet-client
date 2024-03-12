@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Net;
 using System.Collections.Specialized;
 using System.Globalization;
-using System.Threading;
-using Rampastring.Tools;
-using ClientCore;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using ClientCore;
+
+using Rampastring.Tools;
 
 namespace DTAClient.Domain.Multiplayer.CnCNet
 {
@@ -296,28 +299,14 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
 
                 if (MapDownloadQueue.Count == 1)
                 {
-                    object[] details = new object[3];
-                    details[0] = sha1;
-                    details[1] = myGame.ToLower();
-                    details[2] = mapName;
-
-                    ParameterizedThreadStart pts = new ParameterizedThreadStart(Download);
-                    Thread thread = new Thread(pts);
-                    thread.Start(details);
+                    _ = DownloadAsync(sha1, myGame.ToLower(), mapName);
                 }
             }
         }
 
-        private static void Download(object details)
+        private static async Task DownloadAsync(string sha1, string myGameId, string mapName)
         {
-            object[] sha1AndGame = (object[])details;
-            string sha1 = (string)sha1AndGame[0];
-            string myGameId = (string)sha1AndGame[1];
-            string mapName = (string)sha1AndGame[2];
-
             Logger.Log("MapSharer: Preparing to download map " + sha1 + " with name: " + mapName);
-
-            bool success;
 
             try
             {
@@ -329,7 +318,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                 Logger.Log("MapSharer: ERROR " + ex.Message);
             }
 
-            string mapPath = DownloadMain(sha1, myGameId, mapName, out success);
+            (bool success, string mapPath) = await DownloadMainAsync(sha1, myGameId, mapName);
 
             lock (locker)
             {
@@ -350,12 +339,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                 {
                     Logger.Log("MapSharer: Continuing custom map downloads.");
 
-                    object[] array = new object[3];
-                    array[0] = MapDownloadQueue[0];
-                    array[1] = myGameId;
-                    array[2] = mapName;
-
-                    Download(array);
+                    _ = DownloadAsync(MapDownloadQueue[0], myGameId, mapName);
                 }
             }
         }
@@ -363,7 +347,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
         public static string GetMapFileName(string sha1, string mapName)
             => mapName + "_" + sha1;
 
-        private static string DownloadMain(string sha1, string myGame, string mapName, out bool success)
+        private static async Task<(bool Success, string? FilePathOrErrorMessage)> DownloadMainAsync(string sha1, string myGame, string mapName)
         {
             string customMapsDirectory = SafePath.CombineDirectoryPath(ProgramConstants.GamePath, "Maps", "Custom");
 
@@ -378,14 +362,15 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
             destinationFile.Delete();
             newFile.Delete();
 
-            using (TWebClient webClient = new TWebClient())
-            {
-                webClient.Proxy = null;
 
+            {
                 try
                 {
-                    Logger.Log("MapSharer: Downloading URL: " + "http://mapdb.cncnet.org/" + myGame + "/" + sha1 + ".zip");
-                    webClient.DownloadFile("http://mapdb.cncnet.org/" + myGame + "/" + sha1 + ".zip", destinationFile.FullName);
+                    Uri uri = new($"http://mapdb.cncnet.org/{myGame}/{sha1}.zip");
+                    Logger.Log($"MapSharer: Downloading URL: {uri}");
+                    using var ns = await ProgramConstants.SharedClient.GetStreamAsync(uri);
+                    using var fs = destinationFile.Create();
+                    await ns.CopyToAsync(fs);
                 }
                 catch (Exception ex)
                 {
@@ -399,8 +384,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                                             //GlobalVars.WriteLogfile(ex.StackTrace.ToString(), DateTime.Now.ToString("hh:mm:ss") + " DownloadMap: " + ex.Message + _DestFile);
                                             MessageBox.Show("Download failed:" + _DestFile);
                                         }*/
-                    success = false;
-                    return ex.Message;
+                    return (false, ex.Message);
                 }
             }
 
@@ -408,16 +392,14 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
 
             if (!destinationFile.Exists)
             {
-                success = false;
-                return null;
+                return (false, null);
             }
 
             string extractedFile = ExtractZipFile(destinationFile.FullName, customMapsDirectory);
 
             if (String.IsNullOrEmpty(extractedFile))
             {
-                success = false;
-                return null;
+                return (false, null);
             }
 
             // We can safely assume that there will not be a duplicate file due to deleting it
@@ -426,8 +408,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
 
             destinationFile.Delete();
 
-            success = true;
-            return extractedFile;
+            return (true, extractedFile);
         }
 
         class FileToUpload
@@ -441,23 +422,6 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
             public string Filename { get; set; }
             public string ContentType { get; set; }
             public Stream Stream { get; set; }
-        }
-
-        class TWebClient : WebClient
-        {
-            private int Timeout = 10000;
-
-            public TWebClient()
-            {
-                this.Proxy = null;
-            }
-
-            protected override WebRequest GetWebRequest(Uri address)
-            {
-                var webRequest = base.GetWebRequest(address);
-                webRequest.Timeout = Timeout;
-                return webRequest;
-            }
         }
     }
 }
