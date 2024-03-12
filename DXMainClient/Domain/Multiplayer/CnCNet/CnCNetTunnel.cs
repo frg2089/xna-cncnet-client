@@ -3,7 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Net.Http.Json;
 using System.Net.NetworkInformation;
+using System.Threading.Tasks;
+
+using ClientCore;
 
 namespace DTAClient.Domain.Multiplayer.CnCNet
 {
@@ -89,7 +93,7 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
         /// Gets a list of player ports to use from a specific tunnel server.
         /// </summary>
         /// <returns>A list of player ports to use.</returns>
-        public List<int> GetPlayerPortInfo(int playerCount)
+        public async Task<List<int>> GetPlayerPortInfoAsync(int playerCount)
         {
             try
             {
@@ -98,24 +102,11 @@ namespace DTAClient.Domain.Multiplayer.CnCNet
                 string addressString = $"http://{Address}:{Port}/request?clients={playerCount}";
                 Logger.Log($"Downloading from {addressString}");
 
-                using (var client = new ExtendedWebClient(REQUEST_TIMEOUT))
-                {
-                    string data = client.DownloadString(addressString);
+                List<int> playerPorts = await ProgramConstants.SharedClient.GetFromJsonAsync<List<int>>(addressString);
 
-                    data = data.Replace("[", String.Empty);
-                    data = data.Replace("]", String.Empty);
+                playerPorts.ForEach(port => Logger.Log($"Added port {port}"));
 
-                    string[] portIDs = data.Split(',');
-                    List<int> playerPorts = new List<int>();
-
-                    foreach (string _port in portIDs)
-                    {
-                        playerPorts.Add(Convert.ToInt32(_port));
-                        Logger.Log($"Added port {_port}");
-                    }
-
-                    return playerPorts;
-                }
+                return playerPorts;
             }
             catch (Exception ex)
             {

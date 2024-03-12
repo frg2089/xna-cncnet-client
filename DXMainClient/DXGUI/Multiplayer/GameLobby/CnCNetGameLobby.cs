@@ -628,13 +628,13 @@ namespace DTAClient.DXGUI.Multiplayer.GameLobby
         /// <summary>
         /// Starts the game for the game host.
         /// </summary>
-        protected override void HostLaunchGame()
+        protected override async void HostLaunchGame()
         {
             if (Players.Count > 1)
             {
                 AddNotice("Contacting tunnel server...".L10N("Client:Main:ConnectingTunnel"));
 
-                List<int> playerPorts = tunnelHandler.CurrentTunnel.GetPlayerPortInfo(Players.Count);
+                List<int> playerPorts = await tunnelHandler.CurrentTunnel.GetPlayerPortInfoAsync(Players.Count);
 
                 if (playerPorts.Count < Players.Count)
                 {

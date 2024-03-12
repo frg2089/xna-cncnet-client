@@ -602,10 +602,10 @@ namespace DTAClient.DXGUI.Multiplayer.CnCNet
 
         #endregion
 
-        protected override void HostStartGame()
+        protected override async void HostStartGame()
         {
             AddNotice("Contacting tunnel server...".L10N("Client:Main:ConnectingTunnel"));
-            List<int> playerPorts = tunnelHandler.CurrentTunnel.GetPlayerPortInfo(SGPlayers.Count);
+            List<int> playerPorts = await tunnelHandler.CurrentTunnel.GetPlayerPortInfoAsync(SGPlayers.Count);
 
             if (playerPorts.Count < Players.Count)
             {
